@@ -9,8 +9,8 @@ import java.util.logging.Logger;
 
 
 public class ConexionDB {
-    private String host = "localhost";
-//    private String host = "basedatos-1.clmsosfswjgz.us-east-1.rds.amazonaws.com"; //pdescomentar para AWS
+//    private String host = "localhost";
+    private String host = "basedatos-1.clmsosfswjgz.us-east-1.rds.amazonaws.com"; //pdescomentar para AWS
     private int port = 3306;
     private String db = "gestionmedico";
     private String user = "root";
