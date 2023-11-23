@@ -6,6 +6,10 @@
 
     Medico medico = (Medico) request.getAttribute("medico");
     ArrayList<Paciente> pacientes = (ArrayList<Paciente>) request.getAttribute("dataPaciente");
+
+    String esVer = (String) request.getAttribute("esVer");
+    boolean esVerSi = "SI".equals(esVer); // Verificar si es "SI"
+
     if (pacientes == null) {
         pacientes = new ArrayList();
     }
@@ -66,13 +70,28 @@
                         <tr>
                             <td colspan="2">
                     <center>
-                        <form action="index.jsp">
-                            <a title="Volver" class="btn btn-primary" href="MainApp?obj=main&action=indexAdminisMed">
-                                <i class="fa-solid fa-arrow-left"></i>
-                            </a>                           
-                            <a title="Agregar Agenda" class="btn btn-success" data-toggle="modal" data-target="#agregarAgendaModal" >
-                                <i class="fa-solid fa-calendar fa-flip"></i>
+                        <form action="index.jsp"> 
+                            <% if (esVerSi) { %><!-- Si es "SI", deshabilitar los botones -->                            
+                            <a title="Volver" class="btn btn-primary" href="MainApp?obj=main&action=indexMed">
+                                <i class="fa-solid fa-arrow-left"></i> Volver
                             </a>
+                            <% } else { %><!-- Si no es "SI", mantener los botones habilitados -->                            
+                            <a title="Volver" class="btn btn-primary" href="MainApp?obj=main&action=indexAdminisMed">
+                                <i class="fa-solid fa-arrow-left"></i> Volver
+                            </a>  
+                            <% }%>
+
+
+
+                            <% if (esVerSi) { %><!-- Si es "SI", deshabilitar los botones -->                            
+                            <button title="Agregar Agenda" class="btn btn-success" disabled>
+                                <i class="fa-solid fa-calendar fa-flip"></i> Agregar Agenda
+                            </button>
+                            <% } else { %><!-- Si no es "SI", mantener los botones habilitados -->                            
+                            <a title="Agregar Agenda" class="btn btn-success" data-toggle="modal" data-target="#agregarAgendaModal">
+                                <i class="fa-solid fa-calendar fa-flip"></i> Agregar Agenda
+                            </a>
+                            <% }%>
                         </form>
                     </center>
                     </td>
@@ -113,8 +132,8 @@
                                 </div>
 
                                 <div class="col-3">
-                                    <label for="año">Año:</label>
-                                    <select name="año" id="año" class="form-control">
+                                    <label for="anho">Año:</label>
+                                    <select name="anho" id="anho" class="form-control">
                                         <% for (int i = 2023; i <= 2030; i++) {%>
                                         <option value="<%= i%>"><%= i%></option>
                                         <% } %>
@@ -141,7 +160,7 @@
 
                             <div class="form-group">
                                 <label for="descripcion">Descripción corta:</label>
-                                <input type="text" name="descripcion" id="descripcion" class="form-control">
+                                <input type="text" name="descripcion" id="descripcion" class="form-control" required>
                             </div>
 
                             <div class="form-group">
@@ -209,15 +228,41 @@
                                 <%=agenda.getPaciente().getCedula()%> - <%=agenda.getPaciente().getNombres()%> <%=agenda.getPaciente().getApellidos()%>
                             </td>
                             <td style="text-align: center;">
-                                <a title="Borrar" class="btn btn-danger" href="saveAgenda.jsp?codigoAgenda=<%=agenda.getCodigo()%>&codigo=<%=medico.getId()%>&action=del">
+                                
+                                <% if (esVerSi) { %><!-- Si es "SI", deshabilitar los botones -->                            
+                                <button title="Borrar" class="btn btn-danger"  data-toggle="modal" data-target="#confirmDeleteModal<%= agenda.getCodigo()%>" disabled> 
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                                <% } else { %><!-- Si no es "SI", mantener los botones habilitados -->                            
+                                <a title="Borrar" class="btn btn-danger"  data-toggle="modal" data-target="#confirmDeleteModal<%= agenda.getCodigo()%>">
                                     <i class="fa-solid fa-trash"></i>
                                 </a>
+                                <% }%>
                             </td>
                         </tr>
-
-                        <%
-                            }
-                        %>
+                        <!-- Modal confirmar el Delete-->
+                    <div class="modal fade" id="confirmDeleteModal<%= agenda.getCodigo()%>" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmación de Borrado</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    ¿Está seguro de que desea borrar este registro?
+                                </div>
+                                <div class="modal-footer">
+                                    <a  class="btn btn-danger" href="MainApp?obj=main&action=deleteAgenda&idAgenda=<%=agenda.getCodigo()%>&idMedico=<%=medico.getId()%> ">Borrar</a>
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <%
+                        }
+                    %>
 
                     </tbody>
                 </table> 

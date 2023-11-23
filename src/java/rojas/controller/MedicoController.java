@@ -24,10 +24,19 @@ public class MedicoController extends HttpServlet {
         Medico medico;
         Paciente paciente;
         int cedulaMedico, cedulaPaciente;
-        String idMedico, txtCedulaMedico, nombresMedico, apellidosMedico, especialidad, txtCedulaPaciente, nombresPaciente, apellidosPaciente, idPaciente, txtdia, txtmes, txtaño, txthora, txtminuto;
+        String idMedico, txtCedulaMedico,
+                nombresMedico, apellidosMedico,
+                especialidad, txtCedulaPaciente,
+                nombresPaciente, apellidosPaciente,
+                idPaciente, txtdia, txtmes, txtanho,
+                txthora, txtminuto, descripcion, idAgenda;
         switch (action) {
             case "indexPaciente":
                 request.getRequestDispatcher("paciente/index.jsp").forward(request, response);
+                break;
+            case "indexMed":
+                request.setAttribute("data", data);
+                request.getRequestDispatcher("medico/pagina_medico.jsp").forward(request, response);
                 break;
             case "indexAdminisMed":
                 request.setAttribute("data", data);
@@ -62,11 +71,13 @@ public class MedicoController extends HttpServlet {
                 }
                 break;
             case "verAgenda":
+                String esVer = request.getParameter("ver");
                 idMedico = request.getParameter("idMedico");
                 medico = medicoDAO.getAgendaMedico(idMedico);
                 if (medico != null) {
                     request.setAttribute("medico", medico);
                     request.setAttribute("dataPaciente", dataPaciente);
+                    request.setAttribute("esVer", esVer);
                     request.getRequestDispatcher("administrativo/verAgenda.jsp").forward(request, response);
                 } else {
                     response.sendRedirect("MainApp?obj=main&action=indexAdminisMed");
@@ -131,63 +142,69 @@ public class MedicoController extends HttpServlet {
                 idMedico = request.getParameter("idMedico");
                 txtdia = request.getParameter("dia");
                 txtmes = request.getParameter("mes");
-                txtaño = request.getParameter("año");
+                txtanho = request.getParameter("anho");
                 txthora = request.getParameter("hora");
                 txtminuto = request.getParameter("minuto");
                 idPaciente = request.getParameter("paciente");
-
+                descripcion = (request.getParameter("descripcion") != null && !request.getParameter("descripcion").isEmpty()) ? request.getParameter("descripcion") : "sin descripción";
                 int dia = Integer.parseInt(txtdia);
-                int mes = Integer.parseInt(txtdia);
-                int año = Integer.parseInt(txtdia);
-                int hora = Integer.parseInt(txtdia);
-                int minuto = Integer.parseInt(txtdia);
+                int mes = Integer.parseInt(txtmes);
+                int anho = Integer.parseInt(txtanho);
+                int hora = Integer.parseInt(txthora);
+                int minuto = Integer.parseInt(txtminuto);
 
                 boolean agendaOcupada = false;
                 medico = medicoDAO.getAgendaMedico(idMedico);
 
                 for (Agenda agenda : medico.getAgenda()) {
-                    if (agenda.getHora() == hora && agenda.getDia() == dia && agenda.getMes() == mes && agenda.getAnho() == año && agenda.getMinuto() == minuto) {
+                    if (agenda.getHora() == hora && agenda.getDia() == dia && agenda.getMes() == mes && agenda.getAnho() == anho && agenda.getMinuto() == minuto) {
                         agendaOcupada = true;
                         break;
                     }
                 }
                 if (agendaOcupada) {
-                    String msg = "Ya existen un Agenda registrada para esa hora y dia";
-                    request.getSession().setAttribute("error_message", msg);
-                    response.sendRedirect("MainApp?obj=main&action=verAgenda&idMedico="+idMedico);
+                    response.sendRedirect("MainApp?obj=main&action=verAgenda&idMedico=" + idMedico);
                 } else {
-//                    Agenda agenda = new Agenda(codigoAgenda, dia, mes, anho, hora, minutos, descripcion);
-//                    p.getAgenda().add(agenda);
-//                    response.sendRedirect("show.jsp?codigo=" + codigo);
+                    paciente = medicoDAO.getPaciente(idPaciente);
+                    Agenda agenda = new Agenda(dia, mes, anho, hora, minuto, descripcion, paciente);
+                    medicoDAO.addAgenda(agenda, medico);
+                    response.sendRedirect("MainApp?obj=main&action=verAgenda&idMedico=" + idMedico);
                 }
 
                 break;
+            case "deleteAgenda":
+                idAgenda = request.getParameter("idAgenda");
+                idMedico = request.getParameter("idMedico");
+                medicoDAO.deleteAgenda(idAgenda);
+                response.sendRedirect("MainApp?obj=main&action=verAgenda&idMedico=" + idMedico);
+                break;
+            case "consultarPaciente":
+                txtCedulaPaciente = request.getParameter("cedulaPaciente");
+                cedulaPaciente = Integer.parseInt(txtCedulaPaciente);
+                boolean pacienteEncontrado = false;
 
-//            case "selectCanciones":
-//                id = request.getParameter("id");
-//                canciones = listaDAO.getCancionesDisponibles(id);
-//                request.setAttribute("canciones", canciones);
-//                request.setAttribute("id_list", id);
-//                request.getRequestDispatcher("listas/canciones_disponibles.jsp").forward(request, response);
-//                break;
-//            case "saveCanciones":
-//                id = request.getParameter("id_list");
-//                
-//                String[] canciones_ids = request.getParameterValues("canciones");
-//                
-//                for (String id_canciones : canciones_ids) {
-//                    int duracionCancion = listaDAO.getDuracion(id_canciones);
-//                    listaDAO.addCancionLista(id, id_canciones, duracionCancion);
-//                }
-//                response.sendRedirect("Main?obj=listas&action=ver&id=" + id);
-//                break;
-//            case "deleteCancion":
-//                id = request.getParameter("id_lista");
-//                String id_cancion = request.getParameter("id_can");
-//                String duracionCan = request.getParameter("duracionCan");
-//                listaDAO.deleteCancionLista(id, id_cancion, duracionCan);
-//                response.sendRedirect("Main?obj=listas&action=ver&id="+id);
-//                break;
+                for (Paciente pac : dataPaciente) {
+                    if (pac.getCedula() == cedulaPaciente) {
+                        pacienteEncontrado = true;
+                        Agenda Pagenda = medicoDAO.getAgendaPaciente(pac);
+                        if (Pagenda == null) {
+                            String msg = "No existe agenda para paciente con Cedula No. " + cedulaPaciente;
+                            request.getSession().setAttribute("error_message", msg);
+                            response.sendRedirect("MainApp?obj=main&action=indexPaciente");
+                        } else {
+                            request.setAttribute("Paciente", pac);
+                            request.setAttribute("Pagenda", Pagenda);
+                            request.getRequestDispatcher("paciente/agendaPaciente.jsp").forward(request, response);
+                        }
+                        break; // Salir del bucle una vez que se ha encontrado el paciente
+                    }
+                }
+                if (!pacienteEncontrado) {
+                    String msg = "No existe un paciente con Cedula No. " + cedulaPaciente;
+                    request.getSession().setAttribute("error_message", msg);
+                    response.sendRedirect("MainApp?obj=main&action=indexPaciente");
+                }
+                break;
             case "volver":
                 response.sendRedirect("index.jsp");
                 break;

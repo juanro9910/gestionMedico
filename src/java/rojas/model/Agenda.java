@@ -11,14 +11,14 @@ public class Agenda {
     private String descripcion;
     private Paciente paciente;
 
-    public Agenda(int codigo, int dia, int mes, int anho, int hora, int minuto, String descripcion) {
-        this.codigo = codigo;
+    public Agenda( int dia, int mes, int anho, int hora, int minuto, String descripcion, Paciente paciente) {
         this.dia = dia;
         this.mes = mes;
         this.anho = anho;
         this.hora = hora;
         this.minuto = minuto;
         this.descripcion = descripcion;
+        this.paciente = paciente;
     }
 
     public Agenda(int codigo, int dia, int mes, int anho, int hora, int minuto, String descripcion, Paciente paciente) {
